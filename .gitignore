@@ -1,0 +1,11 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+random_code.js
+makefile
+dockerfile
+.DS_Store

@@ -1,0 +1,21 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type BingoCard {
+  numbers: [Int!]!
+}
+
+input User {
+  name: String!
+  password: String!
+  code: Int!
+}
+
+type Query {
+  bingoCard: BingoCard
+}
+
+type Mutation {
+  login(input: User!): String!
+}
