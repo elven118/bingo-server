@@ -1,0 +1,8 @@
+input User {
+  name: String!
+  code: Int!
+}
+
+type Mutation {
+  login(input: User!): String!
+}

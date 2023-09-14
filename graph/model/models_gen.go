@@ -7,7 +7,10 @@ type BingoCard struct {
 }
 
 type User struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	Code     int    `json:"code"`
+	Name string `json:"name"`
+	Code int    `json:"code"`
+}
+
+type ValidateResult struct {
+	IsValid *bool `json:"isValid"`
 }

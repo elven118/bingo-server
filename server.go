@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bingo/graph"
 	"bingo/graph/generated"
-	"bingo/internal/auth"
+	graph "bingo/graph/resolver"
+	"bingo/internal/middleware/auth"
 	"bingo/pkg/mongoClient"
 	"context"
 	"log"

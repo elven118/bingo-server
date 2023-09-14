@@ -1,0 +1,12 @@
+type BingoCard {
+  numbers: [Int!]!
+}
+
+type ValidateResult {
+  isValid: Boolean
+}
+
+type Query {
+  bingoCard: BingoCard!
+  validateCard(id: String!): ValidateResult!
+}

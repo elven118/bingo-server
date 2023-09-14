@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -52,7 +53,12 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		BingoCard func(childComplexity int) int
+		BingoCard    func(childComplexity int) int
+		ValidateCard func(childComplexity int, id string) int
+	}
+
+	ValidateResult struct {
+		IsValid func(childComplexity int) int
 	}
 }
 
@@ -61,6 +67,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	BingoCard(ctx context.Context) (*model.BingoCard, error)
+	ValidateCard(ctx context.Context, id string) (*model.ValidateResult, error)
 }
 
 type executableSchema struct {
@@ -103,6 +110,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.BingoCard(childComplexity), true
+
+	case "Query.validateCard":
+		if e.complexity.Query.ValidateCard == nil {
+			break
+		}
+
+		args, err := ec.field_Query_validateCard_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ValidateCard(childComplexity, args["id"].(string)), true
+
+	case "ValidateResult.isValid":
+		if e.complexity.ValidateResult.IsValid == nil {
+			break
+		}
+
+		return e.complexity.ValidateResult.IsValid(childComplexity), true
 
 	}
 	return 0, false
@@ -173,26 +199,26 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema.graphqls", Input: `# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-type BingoCard {
-  numbers: [Int!]!
-}
-
-input User {
+	{Name: "../schema/auth.graphqls", Input: `input User {
   name: String!
-  password: String!
   code: Int!
-}
-
-type Query {
-  bingoCard: BingoCard
 }
 
 type Mutation {
   login(input: User!): String!
+}
+`, BuiltIn: false},
+	{Name: "../schema/bingoCard.graphqls", Input: `type BingoCard {
+  numbers: [Int!]!
+}
+
+type ValidateResult {
+  isValid: Boolean
+}
+
+type Query {
+  bingoCard: BingoCard!
+  validateCard(id: String!): ValidateResult!
 }
 `, BuiltIn: false},
 }
@@ -229,6 +255,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_validateCard_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -390,11 +431,14 @@ func (ec *executionContext) _Query_bingoCard(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.BingoCard)
 	fc.Result = res
-	return ec.marshalOBingoCard2ᚖbingoᚋgraphᚋmodelᚐBingoCard(ctx, field.Selections, res)
+	return ec.marshalNBingoCard2ᚖbingoᚋgraphᚋmodelᚐBingoCard(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_bingoCard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -410,6 +454,65 @@ func (ec *executionContext) fieldContext_Query_bingoCard(ctx context.Context, fi
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BingoCard", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_validateCard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_validateCard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ValidateCard(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ValidateResult)
+	fc.Result = res
+	return ec.marshalNValidateResult2ᚖbingoᚋgraphᚋmodelᚐValidateResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_validateCard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "isValid":
+				return ec.fieldContext_ValidateResult_isValid(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ValidateResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_validateCard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -538,6 +641,47 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ValidateResult_isValid(ctx context.Context, field graphql.CollectedField, obj *model.ValidateResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ValidateResult_isValid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsValid, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ValidateResult_isValid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ValidateResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2323,7 +2467,7 @@ func (ec *executionContext) unmarshalInputUser(ctx context.Context, obj interfac
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "password", "code"}
+	fieldsInOrder := [...]string{"name", "code"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2335,14 +2479,6 @@ func (ec *executionContext) unmarshalInputUser(ctx context.Context, obj interfac
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			it.Name, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "password":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-			it.Password, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2464,6 +2600,32 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_bingoCard(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "validateCard":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_validateCard(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -2485,6 +2647,31 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var validateResultImplementors = []string{"ValidateResult"}
+
+func (ec *executionContext) _ValidateResult(ctx context.Context, sel ast.SelectionSet, obj *model.ValidateResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, validateResultImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ValidateResult")
+		case "isValid":
+
+			out.Values[i] = ec._ValidateResult_isValid(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -2815,6 +3002,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNBingoCard2bingoᚋgraphᚋmodelᚐBingoCard(ctx context.Context, sel ast.SelectionSet, v model.BingoCard) graphql.Marshaler {
+	return ec._BingoCard(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBingoCard2ᚖbingoᚋgraphᚋmodelᚐBingoCard(ctx context.Context, sel ast.SelectionSet, v *model.BingoCard) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BingoCard(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -2895,6 +3096,20 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 func (ec *executionContext) unmarshalNUser2bingoᚋgraphᚋmodelᚐUser(ctx context.Context, v interface{}) (model.User, error) {
 	res, err := ec.unmarshalInputUser(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNValidateResult2bingoᚋgraphᚋmodelᚐValidateResult(ctx context.Context, sel ast.SelectionSet, v model.ValidateResult) graphql.Marshaler {
+	return ec._ValidateResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNValidateResult2ᚖbingoᚋgraphᚋmodelᚐValidateResult(ctx context.Context, sel ast.SelectionSet, v *model.ValidateResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ValidateResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -3148,13 +3363,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalOBingoCard2ᚖbingoᚋgraphᚋmodelᚐBingoCard(ctx context.Context, sel ast.SelectionSet, v *model.BingoCard) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._BingoCard(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
