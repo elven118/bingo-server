@@ -1,8 +1,17 @@
-input User {
+input LoginInput {
   name: String!
   code: Int!
 }
 
-type Mutation {
-  login(input: User!): String!
+input LoginAdminInput {
+  name: String!
+  password: String!
+}
+
+extend type Mutation {
+  login(input: LoginInput!): String!
+}
+
+extend type Query {
+  loginAdmin(input: LoginAdminInput): String!
 }

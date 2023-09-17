@@ -3,10 +3,19 @@ type BingoCard {
 }
 
 type ValidateResult {
-  isValid: Boolean
+  row: [Int]!
+  col: [Int]!
+  diagonal: [Int]!
+	numbers: [Int!]!
+  isValid: Boolean!
 }
 
-type Query {
+extend type Query {
   bingoCard: BingoCard!
   validateCard(id: String!): ValidateResult!
+}
+
+extend type Mutation {
+  addLotteryNumber(number: Int!): Int!
+  resetLottery: Boolean!
 }

@@ -21,8 +21,6 @@ const (
 	defaultMongoUrl = "mongodb://localhost:27017/?maxPoolSize=1"
 )
 
-// var MongoDB *mongoClient.DB
-
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
