@@ -6,14 +6,9 @@ type BingoCard struct {
 	Numbers []int `json:"numbers"`
 }
 
-type LoginAdminInput struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
-}
-
 type LoginInput struct {
 	Name string `json:"name"`
-	Code int    `json:"code"`
+	Code string `json:"code"`
 }
 
 type User struct {

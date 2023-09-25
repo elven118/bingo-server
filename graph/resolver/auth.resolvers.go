@@ -8,14 +8,11 @@ import (
 	"bingo/graph/generated"
 	"bingo/graph/model"
 	"bingo/internal/app/bingoCard"
-	"bingo/internal/models"
 	"bingo/pkg/jwt"
-	"bingo/pkg/mongoClient"
 	"context"
 	"fmt"
 	"log"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -23,11 +20,8 @@ import (
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (string, error) {
 	log.Printf("login(name: %s, code: %d)", input.Name, input.Code)
 
-	var user models.User
 	// query user
-	client := mongoClient.ForContext(ctx)
-	coll := client.Database("bingo").Collection("users")
-	err := coll.FindOne(context.Background(), bson.D{{Key: "code", Value: input.Code}}).Decode(&user)
+	user, err := r.userRepository.FindUserByCode(input.Code)
 	if err == mongo.ErrNoDocuments {
 		log.Printf("Code not found %s", input.Code)
 		return "", fmt.Errorf("Code not correct")
@@ -42,12 +36,10 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (s
 		// update account info
 		user.Name = input.Name
 		user.Numbers = bingoCard.GenBingoCard()
-		userReplace, err := coll.ReplaceOne(context.Background(), bson.D{{Key: "_id", Value: user.ID}}, user)
-		if err != nil {
-			log.Println(err)
-			panic(err)
+		if err := r.userRepository.Update(user); err != nil {
+			fmt.Printf("MongoDB update error: %s", err)
+			return "", fmt.Errorf("System Error occur.")
 		}
-		log.Printf("User replace result: %v", userReplace)
 
 		token, err := jwt.GenToken(user.ID.Hex(), input.Name)
 		if err != nil {
@@ -66,12 +58,32 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (s
 		}
 	}
 
-	return "", fmt.Errorf("Username or Password not correct")
+	return "", fmt.Errorf("Username or Code not correct")
 }
 
 // LoginAdmin is the resolver for the loginAdmin field.
-func (r *queryResolver) LoginAdmin(ctx context.Context, input *model.LoginAdminInput) (string, error) {
-	panic(fmt.Errorf("not implemented: LoginAdmin - loginAdmin"))
+func (r *queryResolver) LoginAdmin(ctx context.Context, input *model.LoginInput) (string, error) {
+	// query user
+	user, err := r.userRepository.FindUserByName(input.Name)
+	if err == mongo.ErrNoDocuments {
+		log.Printf("Name not found %s", input.Name)
+		return "", fmt.Errorf("Code not correct")
+	}
+	if err != nil {
+		fmt.Printf("MongoDB error: %s", err)
+		return "", fmt.Errorf("System Error occur.")
+	}
+
+	if user.Name == input.Name && user.Code == input.Code {
+		token, err := jwt.GenToken(user.ID.Hex(), input.Name)
+		if err != nil {
+			log.Printf("Gen Token Error: %v", err)
+			return "", err
+		} else {
+			return token, nil
+		}
+	}
+	return "", fmt.Errorf("Username or Password not correct")
 }
 
 // Mutation returns generated.MutationResolver implementation.

@@ -1,11 +1,6 @@
 input LoginInput {
   name: String!
-  code: Int!
-}
-
-input LoginAdminInput {
-  name: String!
-  password: String!
+  code: String!
 }
 
 extend type Mutation {
@@ -13,5 +8,5 @@ extend type Mutation {
 }
 
 extend type Query {
-  loginAdmin(input: LoginAdminInput): String!
+  loginAdmin(input: LoginInput): String!
 }

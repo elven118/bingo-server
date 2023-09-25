@@ -1,6 +1,7 @@
 package bingoCard
 
 import (
+	"bingo/graph/model"
 	"math/rand"
 	"sort"
 	"time"
@@ -76,21 +77,13 @@ func ResetLottery() bool {
 	return true
 }
 
-type ValidBingo struct {
-	row      []int
-	col      []int
-	diagonal []int
-	isValid  bool
-	numbers  []int
-}
-
-func ValidateBingoCard(cardNumbers []int) *ValidBingo {
-	result := &ValidBingo{
-		row:      []int{},
-		col:      []int{},
-		diagonal: []int{},
-		isValid:  false,
-		numbers:  append([]int{}, cardNumbers...),
+func ValidateBingoCard(cardNumbers []int) *model.ValidateResult {
+	result := &model.ValidateResult{
+		Row:      []*int{},
+		Col:      []*int{},
+		Diagonal: []*int{},
+		IsValid:  false,
+		Numbers:  append([]int{}, cardNumbers...),
 	}
 	exists := make([]bool, len(cardNumbers))
 	exists[12] = true
@@ -113,8 +106,9 @@ func ValidateBingoCard(cardNumbers []int) *ValidBingo {
 				}
 			}
 			if c == 4 {
-				result.row = append(result.row, r)
-				result.isValid = true
+				row := r
+				result.Row = append(result.Row, &row)
+				result.IsValid = true
 			}
 		}
 	}
@@ -137,8 +131,9 @@ func ValidateBingoCard(cardNumbers []int) *ValidBingo {
 				}
 			}
 			if r == 4 {
-				result.col = append(result.col, c)
-				result.isValid = true
+				col := c
+				result.Col = append(result.Col, &col)
+				result.IsValid = true
 			}
 		}
 	}
@@ -159,8 +154,9 @@ func ValidateBingoCard(cardNumbers []int) *ValidBingo {
 			}
 		}
 		if i == 24 {
-			result.diagonal = append(result.diagonal, 0)
-			result.isValid = true
+			d := 0
+			result.Diagonal = append(result.Diagonal, &d)
+			result.IsValid = true
 		}
 	}
 
@@ -179,8 +175,9 @@ func ValidateBingoCard(cardNumbers []int) *ValidBingo {
 			}
 		}
 		if i == 20 {
-			result.diagonal = append(result.diagonal, 1)
-			result.isValid = true
+			d := 1
+			result.Diagonal = append(result.Diagonal, &d)
+			result.IsValid = true
 		}
 	}
 	return result

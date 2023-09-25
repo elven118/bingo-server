@@ -45,6 +45,14 @@ func EqualSlices(slice1, slice2 []int) bool {
 	return true
 }
 
+func IntPointersToInts(intPointers []*int) []int {
+	ints := make([]int, len(intPointers))
+	for i, ptr := range intPointers {
+		ints[i] = *ptr
+	}
+	return ints
+}
+
 func Test1DigBingoCard(t *testing.T) {
 	ResetLottery()
 	AddLotteryNumber(1)
@@ -62,10 +70,11 @@ func Test1DigBingoCard(t *testing.T) {
 
 	// Test case 1 Valid diagonal
 	cardNumbers := []int{9, 2, 13, 10, 12, 28, 21, 22, 24, 23, 39, 41, -1, 35, 40, 47, 56, 46, 48, 54, 61, 73, 67, 70, 74}
-	expectedResultDiagonal := []int{0, 1}
+	expectedResult := []int{0, 1}
 	result := ValidateBingoCard(cardNumbers)
-	if !EqualSlices(result.diagonal, expectedResultDiagonal) {
-		t.Errorf("Test case 1 diagonal failed: Expected %v, got %v", expectedResultDiagonal, result.diagonal)
+	diagonal := IntPointersToInts(result.Diagonal)
+	if !EqualSlices(diagonal, expectedResult) {
+		t.Errorf("Test case 1 diagonal failed: Expected %v, got %v", expectedResult, diagonal)
 	}
 }
 
@@ -81,8 +90,9 @@ func Test2ColBingoCard(t *testing.T) {
 	cardNumbers := []int{9, 2, 13, 10, 12, 28, 21, 22, 24, 23, 39, 41, -1, 35, 40, 47, 56, 46, 48, 54, 61, 73, 67, 70, 74}
 	expectedResult := []int{0}
 	result := ValidateBingoCard(cardNumbers)
-	if !EqualSlices(result.col, expectedResult) {
-		t.Errorf("Test case 2 col failed: Expected %v, got %v", expectedResult, result.col)
+	col := IntPointersToInts(result.Col)
+	if !EqualSlices(col, expectedResult) {
+		t.Errorf("Test case 2 col failed: Expected %v, got %v", expectedResult, col)
 	}
 }
 
@@ -98,8 +108,9 @@ func Test3RowBingoCard(t *testing.T) {
 	cardNumbers := []int{9, 2, 13, 10, 12, 28, 21, 22, 24, 23, 39, 41, -1, 35, 40, 47, 56, 46, 48, 54, 61, 73, 67, 70, 74}
 	expectedResult := []int{0}
 	result := ValidateBingoCard(cardNumbers)
-	if !EqualSlices(result.row, expectedResult) {
-		t.Errorf("Test case 1 row failed: Expected %v, got %v", expectedResult, result.row)
+	row := IntPointersToInts(result.Row)
+	if !EqualSlices(row, expectedResult) {
+		t.Errorf("Test case 3 row failed: Expected %v, got %v", expectedResult, row)
 	}
 }
 
@@ -124,8 +135,9 @@ func Test4RowsBingoCard(t *testing.T) {
 	cardNumbers := []int{9, 2, 13, 10, 12, 28, 21, 22, 24, 23, 39, 41, -1, 35, 40, 47, 56, 46, 48, 54, 61, 73, 67, 70, 74}
 	expectedResult := []int{1, 2, 3}
 	result := ValidateBingoCard(cardNumbers)
-	if !EqualSlices(result.row, expectedResult) {
-		t.Errorf("Test case 4 rows failed: Expected %v, got %v", expectedResult, result.row)
+	row := IntPointersToInts(result.Row)
+	if !EqualSlices(row, expectedResult) {
+		t.Errorf("Test case 4 rows failed: Expected %v, got %v", expectedResult, row)
 	}
 }
 
@@ -161,8 +173,8 @@ func Test5BingoCard(t *testing.T) {
 	cardNumbers := []int{14, 1, 4, 2, 10, 27, 22, 21, 29, 17, 40, 37, -1, 45, 39, 50, 54, 56, 58, 46, 71, 63, 72, 74, 62}
 	expectedResult := false
 	result := ValidateBingoCard(cardNumbers)
-	if expectedResult != result.isValid {
-		t.Errorf("Test case 5 failed: Expected %v, got %v", expectedResult, result.isValid)
+	if expectedResult != result.IsValid {
+		t.Errorf("Test case 5 failed: Expected %v, got %v", expectedResult, result.IsValid)
 	}
 }
 
@@ -197,7 +209,7 @@ func Test6BingoCard(t *testing.T) {
 	// Test case 5: Invalid
 	cardNumbers := []int{14, 1, 4, 2, 10, 27, 22, 21, 29, 17, 40, 37, -1, 45, 39, 50, 54, 56, 58, 46, 71, 63, 72, 74, 62}
 	result := ValidateBingoCard(cardNumbers)
-	if EqualSlices(cardNumbers, result.numbers) {
-		t.Errorf("Test case numbers failed: Expected %v, got %v", cardNumbers, result.numbers)
+	if EqualSlices(cardNumbers, result.Numbers) {
+		t.Errorf("Test case numbers failed: Expected %v, got %v", cardNumbers, result.Numbers)
 	}
 }

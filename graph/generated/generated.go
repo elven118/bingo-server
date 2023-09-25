@@ -56,7 +56,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		BingoCard    func(childComplexity int) int
-		LoginAdmin   func(childComplexity int, input *model.LoginAdminInput) int
+		LoginAdmin   func(childComplexity int, input *model.LoginInput) int
 		Users        func(childComplexity int, id *string) int
 		ValidateCard func(childComplexity int, id string) int
 	}
@@ -82,7 +82,7 @@ type MutationResolver interface {
 	ResetLottery(ctx context.Context) (bool, error)
 }
 type QueryResolver interface {
-	LoginAdmin(ctx context.Context, input *model.LoginAdminInput) (string, error)
+	LoginAdmin(ctx context.Context, input *model.LoginInput) (string, error)
 	BingoCard(ctx context.Context) (*model.BingoCard, error)
 	ValidateCard(ctx context.Context, id string) (*model.ValidateResult, error)
 	Users(ctx context.Context, id *string) ([]*model.User, error)
@@ -158,7 +158,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.LoginAdmin(childComplexity, args["input"].(*model.LoginAdminInput)), true
+		return e.complexity.Query.LoginAdmin(childComplexity, args["input"].(*model.LoginInput)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -248,7 +248,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputLoginAdminInput,
 		ec.unmarshalInputLoginInput,
 	)
 	first := true
@@ -349,12 +348,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "../schema/auth.graphqls", Input: `input LoginInput {
   name: String!
-  code: Int!
-}
-
-input LoginAdminInput {
-  name: String!
-  password: String!
+  code: String!
 }
 
 extend type Mutation {
@@ -362,7 +356,7 @@ extend type Mutation {
 }
 
 extend type Query {
-  loginAdmin(input: LoginAdminInput): String!
+  loginAdmin(input: LoginInput): String!
 }
 `, BuiltIn: false},
 	{Name: "../schema/bingoCard.graphqls", Input: `type BingoCard {
@@ -452,10 +446,10 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_loginAdmin_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.LoginAdminInput
+	var arg0 *model.LoginInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOLoginAdminInput2ᚖbingoᚋgraphᚋmodelᚐLoginAdminInput(ctx, tmp)
+		arg0, err = ec.unmarshalOLoginInput2ᚖbingoᚋgraphᚋmodelᚐLoginInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -744,7 +738,7 @@ func (ec *executionContext) _Query_loginAdmin(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().LoginAdmin(rctx, fc.Args["input"].(*model.LoginAdminInput))
+		return ec.resolvers.Query().LoginAdmin(rctx, fc.Args["input"].(*model.LoginInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3217,44 +3211,6 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputLoginAdminInput(ctx context.Context, obj interface{}) (model.LoginAdminInput, error) {
-	var it model.LoginAdminInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name", "password"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "password":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Password = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj interface{}) (model.LoginInput, error) {
 	var it model.LoginInput
 	asMap := map[string]interface{}{}
@@ -3282,7 +3238,7 @@ func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4475,11 +4431,11 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalOLoginAdminInput2ᚖbingoᚋgraphᚋmodelᚐLoginAdminInput(ctx context.Context, v interface{}) (*model.LoginAdminInput, error) {
+func (ec *executionContext) unmarshalOLoginInput2ᚖbingoᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v interface{}) (*model.LoginInput, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputLoginAdminInput(ctx, v)
+	res, err := ec.unmarshalInputLoginInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

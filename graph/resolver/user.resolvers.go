@@ -6,28 +6,15 @@ package graph
 
 import (
 	"bingo/graph/model"
-	"bingo/pkg/mongoClient"
 	"context"
 	"fmt"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, id *string) ([]*model.User, error) {
 	// query users
-	client := mongoClient.ForContext(ctx)
-	coll := client.Database("bingo").Collection("users")
-	opts := options.Find().SetProjection(bson.D{{Key: "_id", Value: 1}, {Key: "name", Value: 1}, {Key: "role", Value: 1}})
-	cursor, err := coll.Find(context.Background(), bson.D{}, opts)
+	users, err := r.userRepository.FindAllPlayersWithName()
 	if err != nil {
-		fmt.Printf("MongoDB error: %s", err)
-		return nil, fmt.Errorf("System Error occur.")
-	}
-
-	var users []*model.User
-	if err = cursor.All(context.TODO(), &users); err != nil {
 		fmt.Printf("MongoDB error: %s", err)
 		return nil, fmt.Errorf("System Error occur.")
 	}

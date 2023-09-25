@@ -7,14 +7,14 @@ import (
 type RoleType string
 
 const (
-	PLAYER RoleType = "player"
-	ADMIN  RoleType = "admin"
+	RolePlayer RoleType = "player"
+	RoleAdmin  RoleType = "admin"
 )
 
 type User struct {
 	ID      primitive.ObjectID `bson:"_id" unique:"true" json:"id"`
-	Code    int                `bson:"code" unique:"true"`
+	Code    string             `bson:"code" unique:"true"`
 	Name    string             `bson:"name,omitempty" unique:"true"`
 	Numbers []int              `bson:"numbers,omitempty"`
-	Role    string             `bson:"roleType"`
+	Role    string             `bson:"role"`
 }
