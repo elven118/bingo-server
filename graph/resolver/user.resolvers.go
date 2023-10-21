@@ -6,12 +6,19 @@ package graph
 
 import (
 	"bingo/graph/model"
+	"bingo/internal/middlewares/auth"
+	"bingo/internal/models"
 	"context"
 	"fmt"
 )
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, id *string) ([]*model.User, error) {
+	user := auth.ForContext(ctx)
+	if user == nil || user.Role != string(models.RoleAdmin) {
+		return []*model.User{}, fmt.Errorf("Access Denied")
+	}
+
 	// query users
 	users, err := r.userRepository.FindAllPlayersWithName()
 	if err != nil {

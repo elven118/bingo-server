@@ -8,6 +8,7 @@ import (
 	"bingo/graph/model"
 	"bingo/internal/app/bingoCard"
 	"bingo/internal/middlewares/auth"
+	"bingo/internal/models"
 	"context"
 	"fmt"
 	"log"
@@ -17,32 +18,43 @@ import (
 
 // AddLotteryNumber is the resolver for the addLotteryNumber field.
 func (r *mutationResolver) AddLotteryNumber(ctx context.Context, number int) (int, error) {
+	user := auth.ForContext(ctx)
+	if user == nil || user.Role != string(models.RoleAdmin) {
+		return 0, fmt.Errorf("Access Denied")
+	}
+
 	return bingoCard.AddLotteryNumber(number), nil
 }
 
-// ResetLottery is the resolver for the resetLottery field.
-func (r *mutationResolver) ResetLottery(ctx context.Context) (bool, error) {
+// DeleteLastLotteryNumber is the resolver for the deleteLastLotteryNumber field.
+func (r *mutationResolver) DeleteLastLotteryNumber(ctx context.Context) (bool, error) {
+	user := auth.ForContext(ctx)
+	if user == nil || user.Role != string(models.RoleAdmin) {
+		return false, fmt.Errorf("Access Denied")
+	}
+
+	return bingoCard.DeleteLastLotteryNumber(), nil
+}
+
+// ResetLotteryNumbers is the resolver for the resetLotteryNumbers field.
+func (r *mutationResolver) ResetLotteryNumbers(ctx context.Context) (bool, error) {
+	user := auth.ForContext(ctx)
+	if user == nil || user.Role != string(models.RoleAdmin) {
+		return false, fmt.Errorf("Access Denied")
+	}
+
 	return bingoCard.ResetLottery(), nil
 }
 
 // BingoCard is the resolver for the bingoCard field.
 func (r *queryResolver) BingoCard(ctx context.Context) (*model.BingoCard, error) {
-	userId := auth.ForContext(ctx)
-	if userId == nil {
+	log.Printf("User get bingo card")
+
+	user := auth.ForContext(ctx)
+	if user == nil || user.Role != string(models.RolePlayer) {
 		return &model.BingoCard{}, fmt.Errorf("Access Denied")
 	}
-	log.Printf("User Login with id: %s, name: %s", userId.Id, userId.Name)
-
-	// query user
-	user, err := r.userRepository.FindUserByID(userId.Id)
-	if err == mongo.ErrNoDocuments {
-		log.Printf("No document was found with id %s", userId.Id)
-		return nil, fmt.Errorf("Please login again.")
-	}
-	if err != nil {
-		fmt.Printf("MongoDB error: %s", err)
-		return nil, fmt.Errorf("System Error occur.")
-	}
+	log.Printf("User get bingo card with id: %s, name: %s", user.ID, user.Name)
 
 	if user.Numbers != nil {
 		return &model.BingoCard{Numbers: user.Numbers}, nil
@@ -54,20 +66,35 @@ func (r *queryResolver) BingoCard(ctx context.Context) (*model.BingoCard, error)
 func (r *queryResolver) ValidateCard(ctx context.Context, id string) (*model.ValidateResult, error) {
 	log.Printf("ValidateCard(id: %s)", id)
 
+	user := auth.ForContext(ctx)
+	if user == nil || user.Role != string(models.RoleAdmin) {
+		return &model.ValidateResult{}, fmt.Errorf("Access Denied")
+	}
+
 	// query user
-	user, err := r.userRepository.FindUserByID(id)
+	userForValidate, err := r.userRepository.FindUserByID(id)
 	if err == mongo.ErrNoDocuments {
-		log.Printf("No document was found with id %s", id)
-		return nil, fmt.Errorf("Please login again.")
+		log.Printf("User not found %s", id)
+		return nil, fmt.Errorf("UserId not correct")
 	}
 	if err != nil {
 		fmt.Printf("MongoDB error: %s", err)
 		return nil, fmt.Errorf("System Error occur.")
 	}
 
-	if user.Numbers != nil {
-		validBingo := bingoCard.ValidateBingoCard(user.Numbers)
+	if userForValidate.Numbers != nil {
+		validBingo := bingoCard.ValidateBingoCard(userForValidate.Numbers)
 		return validBingo, nil
 	}
 	return nil, fmt.Errorf("System Error occur.")
+}
+
+// LotteryNumbers is the resolver for the lotteryNumbers field.
+func (r *queryResolver) LotteryNumbers(ctx context.Context) ([]int, error) {
+	user := auth.ForContext(ctx)
+	if user == nil || user.Role != string(models.RoleAdmin) {
+		return []int{}, fmt.Errorf("Access Denied")
+	}
+
+	return bingoCard.GetLotteryNumbers(), nil
 }

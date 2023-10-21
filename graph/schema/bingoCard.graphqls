@@ -13,9 +13,11 @@ type ValidateResult {
 extend type Query {
   bingoCard: BingoCard!
   validateCard(id: String!): ValidateResult!
+  lotteryNumbers: [Int!]!
 }
 
 extend type Mutation {
   addLotteryNumber(number: Int!): Int!
-  resetLottery: Boolean!
+  deleteLastLotteryNumber: Boolean!
+  resetLotteryNumbers: Boolean!
 }

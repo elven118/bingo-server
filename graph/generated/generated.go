@@ -49,16 +49,18 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddLotteryNumber func(childComplexity int, number int) int
-		Login            func(childComplexity int, input model.LoginInput) int
-		ResetLottery     func(childComplexity int) int
+		AddLotteryNumber        func(childComplexity int, number int) int
+		DeleteLastLotteryNumber func(childComplexity int) int
+		Login                   func(childComplexity int, input model.LoginInput) int
+		ResetLotteryNumbers     func(childComplexity int) int
 	}
 
 	Query struct {
-		BingoCard    func(childComplexity int) int
-		LoginAdmin   func(childComplexity int, input *model.LoginInput) int
-		Users        func(childComplexity int, id *string) int
-		ValidateCard func(childComplexity int, id string) int
+		BingoCard      func(childComplexity int) int
+		LoginAdmin     func(childComplexity int, input *model.LoginInput) int
+		LotteryNumbers func(childComplexity int) int
+		Users          func(childComplexity int, id *string) int
+		ValidateCard   func(childComplexity int, id string) int
 	}
 
 	User struct {
@@ -79,12 +81,14 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	Login(ctx context.Context, input model.LoginInput) (string, error)
 	AddLotteryNumber(ctx context.Context, number int) (int, error)
-	ResetLottery(ctx context.Context) (bool, error)
+	DeleteLastLotteryNumber(ctx context.Context) (bool, error)
+	ResetLotteryNumbers(ctx context.Context) (bool, error)
 }
 type QueryResolver interface {
 	LoginAdmin(ctx context.Context, input *model.LoginInput) (string, error)
 	BingoCard(ctx context.Context) (*model.BingoCard, error)
 	ValidateCard(ctx context.Context, id string) (*model.ValidateResult, error)
+	LotteryNumbers(ctx context.Context) ([]int, error)
 	Users(ctx context.Context, id *string) ([]*model.User, error)
 }
 
@@ -122,6 +126,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddLotteryNumber(childComplexity, args["number"].(int)), true
 
+	case "Mutation.deleteLastLotteryNumber":
+		if e.complexity.Mutation.DeleteLastLotteryNumber == nil {
+			break
+		}
+
+		return e.complexity.Mutation.DeleteLastLotteryNumber(childComplexity), true
+
 	case "Mutation.login":
 		if e.complexity.Mutation.Login == nil {
 			break
@@ -134,12 +145,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.LoginInput)), true
 
-	case "Mutation.resetLottery":
-		if e.complexity.Mutation.ResetLottery == nil {
+	case "Mutation.resetLotteryNumbers":
+		if e.complexity.Mutation.ResetLotteryNumbers == nil {
 			break
 		}
 
-		return e.complexity.Mutation.ResetLottery(childComplexity), true
+		return e.complexity.Mutation.ResetLotteryNumbers(childComplexity), true
 
 	case "Query.bingoCard":
 		if e.complexity.Query.BingoCard == nil {
@@ -159,6 +170,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.LoginAdmin(childComplexity, args["input"].(*model.LoginInput)), true
+
+	case "Query.lotteryNumbers":
+		if e.complexity.Query.LotteryNumbers == nil {
+			break
+		}
+
+		return e.complexity.Query.LotteryNumbers(childComplexity), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -374,11 +392,13 @@ type ValidateResult {
 extend type Query {
   bingoCard: BingoCard!
   validateCard(id: String!): ValidateResult!
+  lotteryNumbers: [Int!]!
 }
 
 extend type Mutation {
   addLotteryNumber(number: Int!): Int!
-  resetLottery: Boolean!
+  deleteLastLotteryNumber: Boolean!
+  resetLotteryNumbers: Boolean!
 }
 `, BuiltIn: false},
 	{Name: "../schema/user.graphqls", Input: `type User {
@@ -680,8 +700,8 @@ func (ec *executionContext) fieldContext_Mutation_addLotteryNumber(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_resetLottery(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_resetLottery(ctx, field)
+func (ec *executionContext) _Mutation_deleteLastLotteryNumber(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteLastLotteryNumber(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -694,7 +714,7 @@ func (ec *executionContext) _Mutation_resetLottery(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ResetLottery(rctx)
+		return ec.resolvers.Mutation().DeleteLastLotteryNumber(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -711,7 +731,51 @@ func (ec *executionContext) _Mutation_resetLottery(ctx context.Context, field gr
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_resetLottery(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteLastLotteryNumber(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_resetLotteryNumbers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_resetLotteryNumbers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ResetLotteryNumbers(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_resetLotteryNumbers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -890,6 +954,50 @@ func (ec *executionContext) fieldContext_Query_validateCard(ctx context.Context,
 	if fc.Args, err = ec.field_Query_validateCard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_lotteryNumbers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_lotteryNumbers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().LotteryNumbers(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]int)
+	fc.Result = res
+	return ec.marshalNInt2ᚕintᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_lotteryNumbers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -3329,9 +3437,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "resetLottery":
+		case "deleteLastLotteryNumber":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_resetLottery(ctx, field)
+				return ec._Mutation_deleteLastLotteryNumber(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "resetLotteryNumbers":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_resetLotteryNumbers(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -3432,6 +3547,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_validateCard(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "lotteryNumbers":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_lotteryNumbers(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

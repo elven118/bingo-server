@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+var lotteryNumbersWithOrder []int
 var lotteryNumbers []int
 
 func randomInt(min, max int) int {
@@ -50,7 +51,7 @@ func GenBingoCard() []int {
 
 // InsertSorted inserts an element into a sorted slice while maintaining the sorted order.
 func insertSorted(element int, numbers []int) []int {
-	i := sort.Search(len(numbers), func(i int) bool { return numbers[i] >= element })
+	i := sort.SearchInts(numbers, element)
 	if i < 0 || i > len(numbers) {
 		return numbers
 	}
@@ -59,7 +60,7 @@ func insertSorted(element int, numbers []int) []int {
 }
 
 func isExist(target int, numbers []int) bool {
-	i := sort.Search(len(numbers), func(i int) bool { return numbers[i] >= target })
+	i := sort.SearchInts(numbers, target)
 	if i < len(numbers) && numbers[i] == target {
 		return true
 	} else {
@@ -67,12 +68,42 @@ func isExist(target int, numbers []int) bool {
 	}
 }
 
+func removeSorted(element int, numbers []int) []int {
+	// Find the index of the element to remove using binary search
+	i := sort.SearchInts(numbers, element)
+
+	// If the element was found, remove it from the slice
+	if i < len(numbers) && numbers[i] == element {
+		numbers = append(numbers[:i], numbers[i+1:]...)
+	}
+
+	return numbers
+}
+
 func AddLotteryNumber(element int) int {
+	lotteryNumbersWithOrder = append(lotteryNumbersWithOrder, element)
 	lotteryNumbers = insertSorted(element, lotteryNumbers)
 	return element
 }
 
+func DeleteLastLotteryNumber() bool {
+	if len(lotteryNumbersWithOrder) == 0 {
+		return false
+	}
+
+	l := len(lotteryNumbersWithOrder)
+	element := lotteryNumbersWithOrder[l-1]
+	lotteryNumbersWithOrder = lotteryNumbersWithOrder[:l-1]
+	lotteryNumbers = removeSorted(element, lotteryNumbers)
+	return true
+}
+
+func GetLotteryNumbers() []int {
+	return lotteryNumbersWithOrder
+}
+
 func ResetLottery() bool {
+	lotteryNumbersWithOrder = make([]int, 0)
 	lotteryNumbers = make([]int, 0)
 	return true
 }
@@ -88,10 +119,10 @@ func ValidateBingoCard(cardNumbers []int) *model.ValidateResult {
 	exists := make([]bool, len(cardNumbers))
 	exists[12] = true
 
-	// check row
-	for r := 0; r < 5; r++ {
-		for c := 0; c < 5; c++ {
-			index := r*5 + c
+	// check col
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 5; j++ {
+			index := i*5 + j
 			if cardNumbers[index] == -1 {
 				if !exists[index] {
 					break
@@ -105,18 +136,18 @@ func ValidateBingoCard(cardNumbers []int) *model.ValidateResult {
 					break
 				}
 			}
-			if c == 4 {
-				row := r
-				result.Row = append(result.Row, &row)
+			if j == 4 {
+				col := i
+				result.Col = append(result.Col, &col)
 				result.IsValid = true
 			}
 		}
 	}
 
 	// check col
-	for c := 0; c < 5; c++ {
-		for r := 0; r < 5; r++ {
-			index := c + r*5
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 5; j++ {
+			index := i + j*5
 			if cardNumbers[index] == -1 {
 				if !exists[index] {
 					break
@@ -130,9 +161,9 @@ func ValidateBingoCard(cardNumbers []int) *model.ValidateResult {
 					break
 				}
 			}
-			if r == 4 {
-				col := c
-				result.Col = append(result.Col, &col)
+			if j == 4 {
+				row := i
+				result.Row = append(result.Row, &row)
 				result.IsValid = true
 			}
 		}
@@ -159,7 +190,6 @@ func ValidateBingoCard(cardNumbers []int) *model.ValidateResult {
 			result.IsValid = true
 		}
 	}
-
 	for i := 4; i <= 20; i += 4 {
 		if cardNumbers[i] == -1 {
 			if !exists[i] {

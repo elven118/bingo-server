@@ -58,13 +58,15 @@ func main() {
 		}
 	}()
 
-	router := chi.NewRouter()
-	router.Use(auth.AuthenticationMiddleware)
-	router.Use(cors.AllowAll().Handler)
-
 	// init resolver
 	userRepository := repositories.NewUserRepository(client.Database(db))
 	resolver := graph.NewResolver(userRepository)
+
+	// init router and middleware
+	router := chi.NewRouter()
+	router.Use(cors.AllowAll().Handler)
+	router.Use(auth.AuthenticationMiddleware(userRepository))
+
 	// init server
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
 	router.Handle("/", playground.Handler("Bingo playground", "/graphql"))

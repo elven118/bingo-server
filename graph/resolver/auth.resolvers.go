@@ -18,7 +18,7 @@ import (
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (string, error) {
-	log.Printf("login(name: %s, code: %d)", input.Name, input.Code)
+	log.Printf("login(name: %s, code: %s)", input.Name, input.Code)
 
 	// query user
 	user, err := r.userRepository.FindUserByCode(input.Code)

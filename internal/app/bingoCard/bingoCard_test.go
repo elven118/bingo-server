@@ -78,7 +78,7 @@ func Test1DigBingoCard(t *testing.T) {
 	}
 }
 
-func Test2ColBingoCard(t *testing.T) {
+func Test2RowBingoCard(t *testing.T) {
 	ResetLottery()
 	AddLotteryNumber(9)
 	AddLotteryNumber(28)
@@ -90,13 +90,13 @@ func Test2ColBingoCard(t *testing.T) {
 	cardNumbers := []int{9, 2, 13, 10, 12, 28, 21, 22, 24, 23, 39, 41, -1, 35, 40, 47, 56, 46, 48, 54, 61, 73, 67, 70, 74}
 	expectedResult := []int{0}
 	result := ValidateBingoCard(cardNumbers)
-	col := IntPointersToInts(result.Col)
-	if !EqualSlices(col, expectedResult) {
-		t.Errorf("Test case 2 col failed: Expected %v, got %v", expectedResult, col)
+	row := IntPointersToInts(result.Row)
+	if !EqualSlices(row, expectedResult) {
+		t.Errorf("Test case 2 row failed: Expected %v, got %v", expectedResult, row)
 	}
 }
 
-func Test3RowBingoCard(t *testing.T) {
+func Test3ColBingoCard(t *testing.T) {
 	ResetLottery()
 	AddLotteryNumber(2)
 	AddLotteryNumber(9)
@@ -108,13 +108,13 @@ func Test3RowBingoCard(t *testing.T) {
 	cardNumbers := []int{9, 2, 13, 10, 12, 28, 21, 22, 24, 23, 39, 41, -1, 35, 40, 47, 56, 46, 48, 54, 61, 73, 67, 70, 74}
 	expectedResult := []int{0}
 	result := ValidateBingoCard(cardNumbers)
-	row := IntPointersToInts(result.Row)
-	if !EqualSlices(row, expectedResult) {
-		t.Errorf("Test case 3 row failed: Expected %v, got %v", expectedResult, row)
+	col := IntPointersToInts(result.Col)
+	if !EqualSlices(col, expectedResult) {
+		t.Errorf("Test case 3 col failed: Expected %v, got %v", expectedResult, col)
 	}
 }
 
-func Test4RowsBingoCard(t *testing.T) {
+func Test4ColsBingoCard(t *testing.T) {
 	ResetLottery()
 	AddLotteryNumber(21)
 	AddLotteryNumber(22)
@@ -135,9 +135,9 @@ func Test4RowsBingoCard(t *testing.T) {
 	cardNumbers := []int{9, 2, 13, 10, 12, 28, 21, 22, 24, 23, 39, 41, -1, 35, 40, 47, 56, 46, 48, 54, 61, 73, 67, 70, 74}
 	expectedResult := []int{1, 2, 3}
 	result := ValidateBingoCard(cardNumbers)
-	row := IntPointersToInts(result.Row)
-	if !EqualSlices(row, expectedResult) {
-		t.Errorf("Test case 4 rows failed: Expected %v, got %v", expectedResult, row)
+	col := IntPointersToInts(result.Col)
+	if !EqualSlices(col, expectedResult) {
+		t.Errorf("Test case 4 cols failed: Expected %v, got %v", expectedResult, col)
 	}
 }
 
@@ -211,5 +211,86 @@ func Test6BingoCard(t *testing.T) {
 	result := ValidateBingoCard(cardNumbers)
 	if EqualSlices(cardNumbers, result.Numbers) {
 		t.Errorf("Test case numbers failed: Expected %v, got %v", cardNumbers, result.Numbers)
+	}
+}
+
+func Test7DigBingoCard(t *testing.T) {
+	ResetLottery()
+	AddLotteryNumber(1)
+	AddLotteryNumber(2)
+	AddLotteryNumber(9)
+	AddLotteryNumber(10)
+	AddLotteryNumber(12)
+	AddLotteryNumber(13)
+	AddLotteryNumber(21)
+	AddLotteryNumber(24)
+	AddLotteryNumber(48)
+	AddLotteryNumber(56)
+	AddLotteryNumber(61)
+	AddLotteryNumber(74)
+	DeleteLastLotteryNumber()
+	DeleteLastLotteryNumber()
+	AddLotteryNumber(61)
+	AddLotteryNumber(74)
+
+	// Test case 1 Valid diagonal
+	cardNumbers := []int{9, 2, 13, 10, 12, 28, 21, 22, 24, 23, 39, 41, -1, 35, 40, 47, 56, 46, 48, 54, 61, 73, 67, 70, 74}
+	expectedResult := []int{0, 1}
+	result := ValidateBingoCard(cardNumbers)
+	diagonal := IntPointersToInts(result.Diagonal)
+	if !EqualSlices(diagonal, expectedResult) {
+		t.Errorf("Test case 7 diagonal failed: Expected %v, got %v", expectedResult, diagonal)
+	}
+}
+
+func Test8DigBingoCard(t *testing.T) {
+	ResetLottery()
+	AddLotteryNumber(1)
+	AddLotteryNumber(2)
+	AddLotteryNumber(9)
+	AddLotteryNumber(10)
+	AddLotteryNumber(12)
+	AddLotteryNumber(13)
+	AddLotteryNumber(21)
+	AddLotteryNumber(24)
+	AddLotteryNumber(48)
+	AddLotteryNumber(56)
+	AddLotteryNumber(61)
+	AddLotteryNumber(74)
+	DeleteLastLotteryNumber()
+	DeleteLastLotteryNumber()
+	AddLotteryNumber(61)
+	AddLotteryNumber(74)
+	DeleteLastLotteryNumber()
+
+	// Test case 1 Valid diagonal
+	cardNumbers := []int{9, 2, 13, 10, 12, 28, 21, 22, 24, 23, 39, 41, -1, 35, 40, 47, 56, 46, 48, 54, 61, 73, 67, 70, 74}
+	expectedResult := []int{1}
+	result := ValidateBingoCard(cardNumbers)
+	diagonal := IntPointersToInts(result.Diagonal)
+	if !EqualSlices(diagonal, expectedResult) {
+		t.Errorf("Test case 8 diagonal failed: Expected %v, got %v", expectedResult, diagonal)
+	}
+}
+
+func TestGetLotteryNumber(t *testing.T) {
+	ResetLottery()
+	AddLotteryNumber(10)
+	AddLotteryNumber(1)
+	AddLotteryNumber(12)
+	AddLotteryNumber(2)
+	AddLotteryNumber(9)
+	AddLotteryNumber(13)
+	AddLotteryNumber(21)
+	DeleteLastLotteryNumber()
+	DeleteLastLotteryNumber()
+	AddLotteryNumber(21)
+	AddLotteryNumber(18)
+
+	// Test case 1 Valid diagonal
+	expectedResult := []int{10, 1, 12, 2, 9, 21, 18}
+	result := GetLotteryNumbers()
+	if !EqualSlices(result, expectedResult) {
+		t.Errorf("Test case get lottery number: Expected %v, got %v", expectedResult, result)
 	}
 }

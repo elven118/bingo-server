@@ -44,14 +44,16 @@ func GenToken(id string, name string) (string, error) {
 }
 
 func ValidateToken(tokenString string) (*UserClaims, error) {
-	token, _ := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	if claims, ok := token.Claims.(*UserClaims); ok && token.Valid {
 		return claims, nil
 	} else {
-		log.Println("Invalid Token")
 		return nil, fmt.Errorf("Invalid Token")
 	}
 }
